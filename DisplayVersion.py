@@ -7,22 +7,29 @@ import logging
 
 
 class PwnagotchiVersion(plugins.Plugin):
-    __author__ = 'https://github.com/Teraskull/'
-    __version__ = '1.0.0'
+    __author__ = 'https://github.com/gmccauley/'
+    __version__ = '2.0.0'
     __license__ = 'GPL3'
-    __description__ = 'A plugin that will add the Pwnagotchi version to the left of the current mode.'
+    __description__ = 'A plugin that will add the Pwnagotchi version in a configurable location.'
 
+    DEFAULT_POSITION = [150, 100]
+    
     def on_loaded(self):
-        logging.info('Pwnagotchi Version Plugin loaded.')
-
+        logging.info('[DisplayVersion] plugin loaded.')
+        
     def on_ui_setup(self, ui):
+        try:
+            pos = self.options['position'].split(',')
+            pos = [int(x.strip()) for x in pos]
+        except Exception:
+            pos = DEFAULT_POSITION
         ui.add_element(
             'version',
             LabeledValue(
                 color=BLACK,
                 label='',
                 value='v0.0.0',
-                position=(170, 110),
+                position=(pos[0], pos[1]),
                 label_font=fonts.Small,
                 text_font=fonts.Small
             )
