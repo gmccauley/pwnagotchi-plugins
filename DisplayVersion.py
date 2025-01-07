@@ -1,4 +1,4 @@
-from pwnagotchi.ui.components import LabeledValue
+from pwnagotchi.ui.components import Text
 from pwnagotchi.ui.view import BLACK
 import pwnagotchi.plugins as plugins
 import pwnagotchi.ui.fonts as fonts
@@ -12,28 +12,34 @@ class PwnagotchiVersion(plugins.Plugin):
     __license__ = 'GPL3'
     __description__ = 'A plugin that will add the Pwnagotchi version in a configurable location.'
 
-    DEFAULT_POSITION = [150, 100]
-    
+    def __init__(self):
+        self.options = dict()
+
     def on_loaded(self):
         logging.info('[DisplayVersion] plugin loaded.')
-        
+
     def on_ui_setup(self, ui):
-        try:
-            pos = self.options['position'].split(',')
-            pos = [int(x.strip()) for x in pos]
-        except Exception:
-            pos = DEFAULT_POSITION
+        ver = 'v' + str(pwnagotchi.__version__)
+        #ver = 'v1.2.3.4.5.6'
+        logging.info('[DisplayVersion] Version = ' + ver)
+
+        if 'position' in self.options and self.options['position'] is not None:
+            logging.info('[DisplayVersion] Using position in config.toml')
+            posX = int(self.options['position'].split(',')[0].strip())
+            posY = int(self.options['position'].split(',')[1].strip())
+        else:
+        #if True:
+            logging.info('[DisplayVersion] Using default position')
+            posX = ui._width - ((len(ver)) * 5.5)
+            posY = ui._layout['line2'][3] - 10
+        logging.info('[DisplayVersion] Position = (' + str(posX) + ',' + str(posY) + ')')
+
         ui.add_element(
             'version',
-            LabeledValue(
+            Text(
                 color=BLACK,
-                label='',
-                value='v0.0.0',
-                position=(pos[0], pos[1]),
-                label_font=fonts.Small,
-                text_font=fonts.Small
+                value=ver,
+                position=(posX, posY),
+                font=fonts.Small
             )
         )
-
-    def on_ui_update(self, ui):
-        ui.set('version', f'v{pwnagotchi.__version__}')
