@@ -66,12 +66,12 @@ class PiSugar3(plugins.Plugin):
             posY = int(self.options['position'].split(',')[1].strip())
         else:
             logging.info('[pisugar3] Using default position')
-            posX = 0
-            posY = ui._layout['line2'][3] - 30
+            posX = (ui._width // 2) + 20
+            posY = 0
         logging.info('[pisugar3] Position = (' + str(posX) + ',' + str(posY) + ')')
 
         try:
-            ui.add_element('bat', LabeledValue(color=BLACK, label='BAT:', value='0%',
+            ui.add_element('bat', LabeledValue(color=BLACK, label='BAT', value='0',
                                                position=(posX, posY),
                                                label_font=fonts.Bold, text_font=fonts.Medium))
         except Exception as err:
@@ -90,7 +90,7 @@ class PiSugar3(plugins.Plugin):
 
         # If the battery is turned off, the status will display "NF", as in "Not Found".
         if status[0] == None:
-            ui._state._state['bat'].label = "BAT:"
+            ui._state._state['bat'].label = "BAT"
             ui._state._state['bat'].value = "NF"
             # Write the status to the log, so we can see if the battery is turned off.
             # Using only a debug log, so it doesn't spam the log file.
@@ -98,13 +98,13 @@ class PiSugar3(plugins.Plugin):
             return
 
         if status[0] & 0x80:
-            ui._state._state['bat'].label = "CHG:"
+            ui._state._state['bat'].label = "CHG"
         else:
-            ui._state._state['bat'].label = "BAT:"
+            ui._state._state['bat'].label = "BAT"
 
         if capacity <= self.options['shutdown']:
             logging.info('[pisugar3] Empty battery (<= %s%%): shutting down' % self.options['shutdown'])
             ui.update(force=True, new_data={'status': 'Battery exhausted, bye ...'})
             pwnagotchi.shutdown()
 
-        ui.set('bat', "%2i%%" % capacity)
+        ui.set('bat', "%i" % capacity)
