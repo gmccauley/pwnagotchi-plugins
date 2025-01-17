@@ -2,6 +2,7 @@ import logging
 import json
 import os
 import glob
+import time
 
 import pwnagotchi
 import pwnagotchi.plugins as plugins
@@ -52,27 +53,24 @@ TEMPLATE = """
     <input type="text" id="filter" placeholder="Search for ..." title="Type in a filter">
     <ul id="list" data-role="listview" style="list-style-type:disc;">
         {% for handshake in handshakes %}
-            {% for ext in handshake.ext %}
-                <li class="file">
-                    <a href="/plugins/handshakes-dl-hashie/{{handshake.name}}{{ext}}">{{handshake.name}}{{ext}}</a>
-                </li>
-            {% endfor %}
+            <li class="file">
+                <a href="/plugins/handshakes-dl-hashie/{{handshake.name}}">{{handshake.modDate}}&#9;&#9;|&#9;&#9;{{handshake.name}}</a>
+            </li>
         {% endfor %}
     </ul>
 {% endblock %}
 """
 
-class handshakes:
-    def __init__(self, name, path, ext):
-        self.name = name
-        self.path = path
-        self.ext = ext
+class handshakes:  
+    def __init__(self, name, modDate):  
+        self.name = name  
+        self.modDate = modDate
 
 class HandshakesDL(plugins.Plugin):
-    __author__ = 'me@sayakb.com'
-    __version__ = '1.0.0'
+    __author__ = 'https://github.com/gmccauley/'
+    __version__ = '2.0.0'
     __license__ = 'GPL3'
-    __description__ = 'Download handshake captures from web-ui.'
+    __description__ = 'Download files from the handshakes directory from web-ui.'
 
     def __init__(self):
         self.ready = False
@@ -89,21 +87,16 @@ class HandshakesDL(plugins.Plugin):
             return "Plugin not ready"
 
         if path == "/" or not path:
-            pcapfiles = glob.glob(os.path.join(self.config['bettercap']['handshakes'], "*.pcap"))
-
+            pcapfiles = glob.glob(os.path.join(self.config['bettercap']['handshakes'], "*"))
+            
             data = []
             for path in pcapfiles:
-                name = os.path.basename(path)[:-5]
-                fullpathNoExt = path[:-5]
-                possibleExt = ['.2500', '.16800', '.22000']
-                foundExt = ['.pcap']
-                for ext in possibleExt:
-                    if os.path.isfile(fullpathNoExt +  ext):
-                        foundExt.append(ext)
-                data.append(handshakes(name, fullpathNoExt, foundExt))
+                name = os.path.basename(path)
+                modDate = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(os.path.getmtime(path)))
+                data.append(handshakes(name, modDate)) 
             return render_template_string(TEMPLATE,
                                     title="Handshakes | " + pwnagotchi.name(),
-                                    handshakes=data)
+                                    handshakes=sorted(data, key=lambda handshakes: handshakes.modDate, reverse=True))
         else:
             dir = self.config['bettercap']['handshakes']
             try:
